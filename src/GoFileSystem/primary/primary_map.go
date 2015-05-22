@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"msg_queue"
 )
 
 var (
@@ -11,31 +10,31 @@ var (
 
 func waitForMsg() {
 	for true {
-		msg := *(<-msg_queue.msgChnl)
+		msg := *(<-msgChnl)
 		switch msg.header {
-		case msg_queue.GREETING:
+		case GREETING:
 			{
 				// do nothing
 			}
-		case msg_queue.KV_INSERT:
+		case KV_INSERT:
 			{
 				table[msg.key] = msg.val
 			}
-		case msg_queue.KV_DELETE:
+		case KV_DELETE:
 			{
 				delete(table, msg.key)
 			}
-		case msg_queue.KV_GET:
+		case KV_GET:
 			{
-				fmt.Fprintln(msg.w, table[msg.key])
+				fmt.Fprintln(*msg.w, table[msg.key])
 			}
-		case msg_queue.KV_UPDATE:
+		case KV_UPDATE:
 			{
 				table[msg.key] = msg.val
 			}
-		case msg_queue.COUNTKEY:
+		case KVMAN_COUNTKEY:
 			{
-				fmt.Fprintln(msg.w, len(table))
+				fmt.Fprintln(*msg.w, len(table))
 			}
 		}
 	}

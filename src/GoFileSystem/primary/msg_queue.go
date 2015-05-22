@@ -19,18 +19,19 @@ type Msg struct {
 	header int
 	key    string
 	val    string
-	w      *http.ReponseWriter
+	w      *http.ResponseWriter
 }
 
-func newMsg(hd int, k, v string, ww *http.ResponseWriter) *Msg {
-	ret := make(Msg)
+func NewMsg(hd int, k string, v string, ww *http.ResponseWriter) *Msg {
+	ret := new(Msg)
 	ret.header = hd
 	ret.key = k
 	ret.val = v
 	ret.w = ww
 
-	return &ret
+	return ret
 }
+
 
 var (
 	msgChnl = make(chan *Msg, 100)

@@ -19,6 +19,6 @@ func main() {
 	r.HandleFunc("/kvman/dump", HandleDump).Methods("GET")
 	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
 
-	go primary_map.waitForMsg()
+	go waitForMsg()
 	http.ListenAndServe("localhost:4000", r)
 }

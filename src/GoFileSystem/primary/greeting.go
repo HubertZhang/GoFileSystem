@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"msg_queue"
 	"net/http"
 )
 
@@ -20,5 +19,5 @@ func GreetingHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received Message:" + rtn_str)
 
 	fmt.Fprint(w, "Greetings")
-	msgChnl <- msg_queue.newMsg(msg_queue.GREETING, "", "", w)
+	msgChnl <- NewMsg(GREETING, "", "", &w)
 }
