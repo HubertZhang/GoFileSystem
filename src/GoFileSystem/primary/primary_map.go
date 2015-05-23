@@ -12,43 +12,47 @@ func waitForMsg() {
 		msg := <-msgChnl
 		switch msg.header {
 		case GREETING:
-			{
-				data := struct {
-					success bool
-					value string
-				} {
-					true,
-					"Hello, world",
-				}
-				rsp, err := json.Marshal(data)
-				if err != nil {
-					msg.rsp <- NewRsp(nil, err)
-				}
-				msg.rsp <- NewRsp(rsp, nil)
+			data := struct {
+				Success bool `json:"success"`
+				Value string `json:"value"`
+			} {
+				true,
+				"Hello, world",
 			}
+			rsp, err := json.Marshal(data)
+			if err != nil {
+				msg.rsp <- NewRsp(nil, err)
+			}
+			msg.rsp <- NewRsp(rsp, nil)
+
 		case KV_INSERT:
-			{
-				fmt.Println("Perform insert")
-				perform_insert(msg)
-			}
+			fmt.Println("Perform insert")
+			perform_insert(msg)
+
 		case KV_DELETE:
-			{
-				fmt.Println("Perform delete")
-				perform_delete(msg)
-			}
+			fmt.Println("Perform delete")
+			perform_delete(msg)
+
 		case KV_GET:
-			{
-				fmt.Println("Perform get.")
-				perform_get(msg)
-			}
+			fmt.Println("Perform get.")
+			perform_get(msg)
+
 		case KV_UPDATE:
-			{
-				fmt.Println("Perform update")
-				perform_update(msg)
-			}
+			fmt.Println("Perform update")
+			perform_update(msg)
+
 		case KVMAN_COUNTKEY:
-			{
-			}
+			fmt.Println("Perform countkey")
+			perform_countkey(msg)
+
+		case KVMAN_DUMP:
+			fmt.Println("Perform dump")
+			perform_dump(msg)
+
+		case KVMAN_SHUTDOWN:
+			fmt.Println("Perform shutdown")
+			perform_shutdown(msg)
+
 		}
 	}
 }
@@ -94,22 +98,39 @@ func perform_get(msg *Msg) {
 
 func perform_insert(msg *Msg) {
 	// fmt.Println("Insert " + msg.key + " with " + msg.val)
-	table[msg.key] = msg.val
+	_, ok := table[msg.key]
 
-	data := struct {
-		Success bool `json:"success"`
-	} {
-		true,
+	if !ok {
+		table[msg.key] = msg.val
+
+		data := struct {
+			Success bool `json:"success"`
+		} {
+			true,
+		}
+		rsp, err := json.Marshal(data)
+		if err != nil {
+			msg.rsp <- NewRsp(nil, err)
+			return
+		}
+		// for k, v := range table {
+		// 	fmt.Println(k + " : " + v)
+		// }
+		msg.rsp <- NewRsp(rsp, nil)
+	} else {
+		data := struct {
+			Success bool `json:"success"`
+		} {
+			false,
+		}
+		rsp, err := json.Marshal(data)
+		if err != nil {
+			msg.rsp <- NewRsp(nil, err)
+			return
+		}
+		msg.rsp <- NewRsp(rsp, nil)
 	}
-	rsp, err := json.Marshal(data)
-	if err != nil {
-	 	msg.rsp <- NewRsp(nil, err)
-		return
-	}
-	// for k, v := range table {
-	// 	fmt.Println(k + " : " + v)
-	// }
-	msg.rsp <- NewRsp(rsp, nil)
+
 }
 
 func perform_update(msg *Msg) {
@@ -159,4 +180,35 @@ func perform_delete(msg *Msg) {
 	msg.rsp <- NewRsp(rsp, nil)
 }
 
+func perform_countkey(msg *Msg) {
+	data := struct {
+		Result int `json:"result"`
+	} {
+		len(table),
+	}
+	rsp, err := json.Marshal(data)
+	if err != nil {
+		msg.rsp <- NewRsp(nil, err)
+		return
+	}
+	msg.rsp <- NewRsp(rsp, nil)
+}
 
+func perform_dump(msg *Msg) {
+	data := make([][2]string, len(table))
+	counter := 0
+	for k, v := range table {
+		data[counter] = [2]string{k, v}
+		counter += 1
+	}
+	rsp, err := json.Marshal(data)
+	if err != nil {
+		msg.rsp <- NewRsp(nil, err)
+		return
+	}
+	msg.rsp <- NewRsp(rsp, nil)
+}
+
+func perform_shutdown(msg *Msg) {
+	msg.rsp <- NewRsp(nil, nil)
+}
