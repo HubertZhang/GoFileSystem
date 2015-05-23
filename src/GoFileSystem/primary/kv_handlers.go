@@ -10,6 +10,9 @@ func HandleGet(w http.ResponseWriter, r *http.Request) {
 	msg := NewMsg(KV_GET, k, "", rsp)
 	msgChnl <- msg
 	body := <- rsp
+	if body.err != nil {
+		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
 }
@@ -20,6 +23,9 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	msg := NewMsg(KV_DELETE, k, "", rsp)
 	msgChnl <- msg
 	body := <- rsp
+	if body.err != nil {
+		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
 }
@@ -31,6 +37,9 @@ func HandleInsert(w http.ResponseWriter, r *http.Request) {
 	msg := NewMsg(KV_INSERT, k, v, rsp)
 	msgChnl <- msg
 	body := <- rsp
+	if body.err != nil {
+		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
 }
@@ -42,6 +51,9 @@ func HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	msg := NewMsg(KV_UPDATE, k, v, rsp)
 	msgChnl <- msg
 	body := <- rsp
+	if body.err != nil {
+		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
 }
