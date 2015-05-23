@@ -1,22 +1,47 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
 func HandleGet(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Handle get")
+	k := r.URL.Query().Get("key")
+	rsp := make(chan *Rsp, 1)
+	msg := NewMsg(KV_GET, k, "", rsp)
+	msgChnl <- msg
+	body := <- rsp
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body.data)
 }
 
 func HandleDelete(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Handle delete.")
+	k := r.URL.Query().Get("key")
+	rsp := make(chan *Rsp, 1)
+	msg := NewMsg(KV_DELETE, k, "", rsp)
+	msgChnl <- msg
+	body := <- rsp
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body.data)
 }
 
 func HandleInsert(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Handle Insert")
+	k := r.URL.Query().Get("key")
+	v := r.URL.Query().Get("value")
+	rsp := make(chan *Rsp, 1)
+	msg := NewMsg(KV_INSERT, k, v, rsp)
+	msgChnl <- msg
+	body := <- rsp
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body.data)
 }
 
 func HandleUpdate(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Handle update")
+	k := r.URL.Query().Get("key")
+	v := r.URL.Query().Get("value")
+	rsp := make(chan *Rsp, 1)
+	msg := NewMsg(KV_UPDATE, k, v, rsp)
+	msgChnl <- msg
+	body := <- rsp
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body.data)
 }

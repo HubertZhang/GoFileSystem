@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 )
 
 const (
@@ -19,19 +18,30 @@ type Msg struct {
 	header int
 	key    string
 	val    string
-	w      *http.ResponseWriter
+	rsp    chan *Rsp
 }
 
-func NewMsg(hd int, k string, v string, ww *http.ResponseWriter) *Msg {
+type Rsp struct {
+	data []byte
+	err  error
+}
+
+func NewMsg(hd int, k string, v string, rsp chan *Rsp) *Msg {
 	ret := new(Msg)
 	ret.header = hd
 	ret.key = k
 	ret.val = v
-	ret.w = ww
+	ret.rsp = rsp
 
 	return ret
 }
 
+func NewRsp(data []byte, err error) *Rsp {
+	rsp := new(Rsp)
+	rsp.data = data
+	rsp.err = err
+	return rsp
+}
 
 var (
 	msgChnl = make(chan *Msg, 100)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -14,10 +13,8 @@ func (router GreetingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 */
 
 func GreetingHandler(w http.ResponseWriter, r *http.Request) {
-
-	rtn_str := Write("Hello, world")
-	fmt.Println("Received Message:" + rtn_str)
-
-	fmt.Fprint(w, "Greetings")
-	msgChnl <- NewMsg(GREETING, "", "", &w)
+	rsp := make(chan *Rsp, 1)
+	msgChnl <- NewMsg(GREETING, "", "", rsp)
+	body := <- rsp
+	w.Write(body.data)
 }
