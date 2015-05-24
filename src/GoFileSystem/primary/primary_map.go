@@ -103,6 +103,13 @@ func perform_insert(msg *Msg) {
 	if !ok {
 		table[msg.key] = msg.val
 
+		op, err := json.Marshal(NewOp(KV_INSERT, msg.key, msg.val))
+		if err != nil {
+			msg.rsp <- NewRsp(nil, err)
+			return
+		}
+		Write(op)
+
 		data := struct {
 			Success bool `json:"success"`
 		} {
@@ -113,9 +120,6 @@ func perform_insert(msg *Msg) {
 			msg.rsp <- NewRsp(nil, err)
 			return
 		}
-		// for k, v := range table {
-		// 	fmt.Println(k + " : " + v)
-		// }
 		msg.rsp <- NewRsp(rsp, nil)
 	} else {
 		data := struct {
@@ -137,6 +141,13 @@ func perform_update(msg *Msg) {
 	_, ok := table[msg.key]
 	if ok {
 		table[msg.key] = msg.val
+
+		op, err := json.Marshal(NewOp(KV_UPDATE, msg.key, msg.val))
+		if err != nil {
+			msg.rsp <- NewRsp(nil, err)
+			return
+		}
+		Write(op)
 
 		data := struct {
 			Success bool `json:"success"`
@@ -166,6 +177,12 @@ func perform_update(msg *Msg) {
 
 func perform_delete(msg *Msg) {
 	delete(table, msg.key)
+	op, err := json.Marshal(NewOp(KV_DELETE, msg.key, msg.val))
+	if err != nil {
+		msg.rsp <- NewRsp(nil, err)
+		return
+	}
+	Write(op)
 
 	data := struct {
 		Success bool `json:"success"`
