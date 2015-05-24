@@ -20,5 +20,8 @@ func main() {
 	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
 
 	go waitForMsg()
+
+	StartConn()
+
 	http.ListenAndServe("localhost:4000", r)
 }
