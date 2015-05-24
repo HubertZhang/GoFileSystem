@@ -33,6 +33,7 @@ func HandleConnection(con net.Conn) {
 				conn.Close()
 				return
 			}
+			Perform(msg)
 		}
 	} else {
 		fmt.Println("Conn fail.")
@@ -80,10 +81,6 @@ func getMsg() *Op {
 
 	op := new(Op)
 	err = json.Unmarshal(body, op)
-
-	fmt.Println(op.OpCode)
-	fmt.Println(op.Key)
-	fmt.Println(op.Value)
 
 	conn.Write([]byte{1})
 

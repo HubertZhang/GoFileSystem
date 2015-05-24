@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 const (
@@ -12,7 +14,18 @@ const (
 	CONN_TYPE = "tcp"
 )
 
+var sig_end chan int = make(chan int, 2)
+
 func main() {
+	go TcpServer()
+	go HttpServer()
+	<- sig_end
+	<- sig_end
+}
+
+func TcpServer() {
+	defer sigEnd()
+
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if (err != nil) {
 		fmt.Println("Main::LISTEN::Error: " + err.Error())
@@ -29,4 +42,18 @@ func main() {
 
 		go HandleConnection(conn)
 	}
+}
+
+func HttpServer() {
+	defer sigEnd()
+
+	r := mux.NewRouter()
+	r.HandleFunc("/kvman/countkey", HandleCountKey).Methods("GET")
+	r.HandleFunc("/kvman/dump", HandleDump).Methods("GET")
+	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
+	http.ListenAndServe("localhost:8000", r)
+}
+
+func sigEnd() {
+	sig_end <- 1
 }
