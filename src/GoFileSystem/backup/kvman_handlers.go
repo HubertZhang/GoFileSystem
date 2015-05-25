@@ -38,6 +38,8 @@ func HandleDump(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleShutdown(w http.ResponseWriter, r *http.Request) {
-	conn.Close()
+	if conn != nil {
+		conn.Close()
+	}
 	os.Exit(0)
 }
