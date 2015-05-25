@@ -135,11 +135,14 @@ def main():
     start_primary()
     start_backup()
     insert_test()
+    stop_backup()
+    start_backup()
     delete_test()
     update_test()
     dump_test()
-    # stop_backup()
-    # start_backup()
+    stop_primary()
+    start_primary()
+    dump_test()
 
 
 main()
