@@ -5,6 +5,7 @@ import (
 	"net"
 	"bufio"
 	"encoding/binary"
+	"encoding/json"
 )
 
 var conn net.Conn = nil
@@ -34,18 +35,47 @@ func StartConn() bool {
 
 	conn.Write([]byte{1})
 
-	rsp, err := bufio.NewReader(conn).ReadByte()
+	header := make([]byte, 8)
+
+	reader := bufio.NewReader(conn)
+
+	n, err := reader.Read(header)
 	if err != nil {
 		fmt.Println("Write::READBYTE::Error: " + err.Error())
 		return false
 	}
-	if rsp == 1 {
-		fmt.Println("Started.")
-		return true
-	} else {
-		fmt.Println("Fail")
+	if n != 8 {
+		fmt.Println("STARUP::Error: Header Error")
 		return false
 	}
+
+	body_length, n := binary.Uvarint(header)
+	if n < 0 {
+		fmt.Println("STARTUP::Error: Length too large")
+		return false
+	}
+	if n == 0 {
+		fmt.Println("STARTUP::Error: Buffer is too small")
+		return false
+	}
+
+	body := make([]byte, body_length)
+	n, err = reader.Read(body)
+	if err != nil {
+		fmt.Println("STARTUP::Error: " + err.Error())
+		return false
+	}
+	if uint64(n) < body_length {
+		fmt.Println("STARTUP::Error: Body Error")
+		return false
+	}
+
+	err = json.Unmarshal(body, &table)
+	if err != nil {
+		fmt.Println("STARTUP::Error: " + err.Error())
+		return false
+	}
+	return true
 }
 
 func Write(msg []byte) bool {
@@ -64,6 +94,41 @@ func Write(msg []byte) bool {
 	if rsp == 1 {
 		return true
 	} else {
+		return false
+	}
+}
+
+func WaitReconnect() bool {
+	fmt.Println("StartConn.")
+	var err error = nil
+	conn, err = net.Dial("tcp", "localhost:5000")
+	if err != nil {
+		fmt.Println("Write::DIAL::Error: " + err.Error())
+		return false
+	}
+
+	conn.Write([]byte{2})
+
+	data, err := json.Marshal(table)
+	if err != nil {
+		fmt.Println("WAITRECONNECT::Error: " + err.Error())
+		return false
+	}
+	var length uint64 = uint64(len(data))
+	header := make([]byte, 8)
+	binary.PutUvarint(header, length)
+	conn.Write(header)
+	conn.Write(data)
+
+	rsp, err := bufio.NewReader(conn).ReadByte()
+	if err != nil {
+		fmt.Println("WAITRECONNECT::Error: " + err.Error())
+		return false
+	}
+	if rsp == 1 {
+		return true
+	} else {
+		fmt.Println("Wrong Reply")
 		return false
 	}
 }

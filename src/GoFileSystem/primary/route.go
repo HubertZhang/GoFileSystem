@@ -4,6 +4,7 @@ import (
 	// "log"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -21,7 +22,11 @@ func main() {
 
 	go waitForMsg()
 
-	StartConn()
+	if !StartConn() {
+		for !WaitReconnect() {
+			time.Sleep(1 * time.Second)
+		}
+	}
 
 	http.ListenAndServe("localhost:4000", r)
 }

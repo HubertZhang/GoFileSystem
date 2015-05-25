@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 var table = make(map[string]string)
@@ -56,7 +57,7 @@ func waitForMsg() {
 		}
 	}
 }
-
+ 
 
 func perform_get(msg *Msg) {
 
@@ -108,7 +109,11 @@ func perform_insert(msg *Msg) {
 			msg.rsp <- NewRsp(nil, err)
 			return
 		}
-		Write(op)
+		if !Write(op) {
+			for !WaitReconnect() {
+				time.Sleep(1 * time.Second)
+			}
+		}
 
 		data := struct {
 			Success bool `json:"success"`
@@ -147,7 +152,11 @@ func perform_update(msg *Msg) {
 			msg.rsp <- NewRsp(nil, err)
 			return
 		}
-		Write(op)
+		if !Write(op) {
+			for !WaitReconnect() {
+				time.Sleep(1 * time.Second)
+			}
+		}
 
 		data := struct {
 			Success bool `json:"success"`
@@ -182,7 +191,11 @@ func perform_delete(msg *Msg) {
 		msg.rsp <- NewRsp(nil, err)
 		return
 	}
-	Write(op)
+	if !Write(op) {
+		for !WaitReconnect() {
+			time.Sleep(1 * time.Second)
+		}
+	}
 
 	data := struct {
 		Success bool `json:"success"`
