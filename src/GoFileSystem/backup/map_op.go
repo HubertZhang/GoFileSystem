@@ -9,6 +9,7 @@ const (
 	KVMAN_COUNTKEY = 5
 	KVMAN_DUMP     = 6
 	KVMAN_SHUTDOWN = 7
+	BACKUP         = 8
 )
 
 var table = make(map[string]string)
