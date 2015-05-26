@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 __author__ = 'Hubert'
 
 import requests
@@ -6,35 +8,42 @@ import os
 import random
 import time
 import subprocess
+import threading
 
 server = "http://localhost:4000/kv/"
 server_admin = "http://localhost:4000/kvman/"
 backup_admin = "http://localhost:8000/kvman/"
 
-primary_process = None
-backup_process=None
+def load_config():
+    file = open(os.getcwd()+"/../../conf/settings.conf", "r")
+    config = json.load(file)
+    global server_admin, server, backup_admin
+    primary_ip = config['primary']
+    backup_ip = config['backup']
+    port = config['port']
+    server = "http://{ip}:{port}/kv/".format(ip = primary_ip, port = port)
+    server_admin = "http://{ip}:{port}/kvman/".format(ip = primary_ip, port = port)
+    backup_admin = "http://{ip}:{port}/kvman/".format(ip = backup_ip, port = port)
 
-def start_primary(file = subprocess.PIPE):
-    global primary_process
-    primary_process = subprocess.Popen([os.getcwd()+"/../primary"], stdout=file)
+def start_primary(file=subprocess.DEVNULL):
+    subprocess.Popen([os.getcwd() + "/start_server", "-p"], stdout=file)
 
-def start_backup(file = subprocess.PIPE):
-    global backup_process
-    backup_process = subprocess.Popen([os.getcwd()+"/../backup"], stdout=file)
+
+def start_backup(file=subprocess.DEVNULL):
+    subprocess.Popen([os.getcwd() + "/start_server", "-b"], stdout=file)
+
 
 def stop_primary():
-    global primary_process
-    primary_process.kill()
-    return
+    subprocess.Popen([os.getcwd() + "/stop_server", "-p"], stdout=subprocess.DEVNULL)
+
 
 def stop_backup():
-    global backup_process
-    backup_process.kill()
-    return
+    subprocess.Popen([os.getcwd() + "/stop_server", "-b"], stdout=subprocess.DEVNULL)
 
 def test_primary():
     for key in backup.keys():
-        if (get(key)["value"]!=backup[key]):
+        result, = get(key)
+        if (result["value"] != backup[key]):
             return False
     return True
 
@@ -42,9 +51,9 @@ def test_primary():
 def get(key=""):
     if (key == ""):
         return
-    params={"key":key}
-    r = requests.get(server + "get", params = params)
-    return r.json()
+    params = {"key": key}
+    r = requests.get(server + "get", params=params)
+    return r.json(), r.elapsed.total_seconds()
 
 
 def delete(key=""):
@@ -52,7 +61,7 @@ def delete(key=""):
         return
     payload = {'key': key}
     r = requests.post(server + "delete", data=json.dumps(payload))
-    return r.json()
+    return r.json(), r.elapsed.total_seconds()
 
 
 def insert(key="", value=""):
@@ -60,7 +69,7 @@ def insert(key="", value=""):
         return
     payload = {'key': key, "value": value}
     r = requests.post(server + "insert", data=json.dumps(payload))
-    return r.json()
+    return r.json(), r.elapsed.total_seconds()
 
 
 def update(key="", value=""):
@@ -68,11 +77,12 @@ def update(key="", value=""):
         return
     payload = {'key': key, "value": value}
     r = requests.post(server + "update", data=json.dumps(payload))
-    return r.json()
+    return r.json(), r.elapsed.total_seconds()
+
 
 def dump():
     r = requests.get(server_admin + "dump")
-    return r.json()
+    return r.json(), r.elapsed
 
 # 1.	Insert 10 pair, read it back – 5%
 # 2.	Restart backup, on successful restart – 5%
@@ -83,72 +93,263 @@ def dump():
 
 
 test_key_list = ["key1", "_key2", "^%!@#$%^&*()key3", "{key4", "key5_+=", "key6-=_+-[", "key7测试", "{key8=", "_key9\'\"",
-            "]key10\\|"]
-test_value_list = ["12421", "aslfjhalgha", "657468svca", "18726(^&(^(", "0chp3\"`", ")*HPB", "啦啦啦", "+++", "~!@#GX",
-              "{\ndAFqw}"]
+                 "]key10\\|"]
+test_value_list = ["12421", "aslf\rjhalgha", "657468sv\0ca", "18726\a(^&(^(", "0chp3\"`", ")*HPB", "啦啦啦", "+++",
+                   "~!@#GX",
+                   "{\ndAFqw}"]
 
 backup = dict()
 
+
 def insert_test():
+    passed = True
     for i in range(10):
         try:
-            result = get(test_key_list[i])
+            result, = get(test_key_list[i])
             if result["success"]:
-                print("Error when inserting \"{0}\"=\"{1}\", key exists".format(test_key_list[i], test_value_list[i]))
+                passed = False
                 break
-            result = insert(test_key_list[i], test_value_list[i])
+            result, = insert(test_key_list[i], test_value_list[i])
             if not result["success"]:
-                print("Error when inserting \"{0}\"=\"{1}\", insert failed".format(test_key_list[i], test_value_list[i]))
+                passed = False
                 break
-            result = get(test_key_list[i])
-            if not result["success"] or result["value"]!=test_value_list[i]:
-                print("Error when inserting \"{0}\"=\"{1}\", get error".format(test_key_list[i], test_value_list[i]))
+            result, = get(test_key_list[i])
+            if not result["success"] or result["value"] != test_value_list[i]:
+                passed = False
             backup[test_key_list[i]] = test_value_list[i]
         except ValueError:
-            print("Error when inserting \"{0}\"=\"{1}\", json failed".format(test_key_list[i], test_value_list[i]))
-    print("Insert test finished")
+            passed = False
+    return passed
+
 
 def delete_test():
+    passed = True
     for key in random.sample(backup.keys(), 2):
-        result = delete(key)
+        result, = delete(key)
         if (not result["success"]):
-            print("Error when deleting \"{0}\"=\"{1}\"".format(key, backup[key]))
+            passed = False
+            # print("Error when deleting \"{0}\"=\"{1}\"".format(key, backup[key]))
         del backup[key]
-    print("delete test finished")
+    # print("delete test finished")
+    return passed
+
 
 def update_test():
+    passed = True
     for key in random.sample(backup.keys(), 2):
-        result = update(key, "changed")
+        result, = update(key, "changed")
         if not result["success"]:
-            print("Error when updating \"{0}\"=\"{1}\" to \"changed\"".format(key, backup[key]))
+            passed = False
+            # print("Error when updating \"{0}\"=\"{1}\" to \"changed\"".format(key, backup[key]))
         backup[key] = "changed"
-        result = get(key)
-        if not result["success"] or result["value"]!="changed":
-            print("Error when updating \"{0}\"=\"{1}\", value error".format(key, "changed"))
-    print("update test finished")
+        result, = get(key)
+        if not result["success"] or result["value"] != "changed":
+            passed = False
+            # print("Error when updating \"{0}\"=\"{1}\", value error".format(key, "changed"))
+    # print("update test finished")
+    return passed
+
 
 def dump_test():
+    passed = True
     result = dump()
     keys = backup.keys()
     for kv in result:
-        if (kv[0] not in keys) or (backup[kv[0]])!=kv[1]:
-            print("Error when checking \"{0}\"=\"{1}\", value error".format(key, "changed"))
+        if (kv[0] not in keys) or (backup[kv[0]]) != kv[1]:
+            passed = False
+            # print("Error when checking \"{0}\"=\"{1}\", value error".format(key, "changed"))
     # print(result)
-    print("Dump test finished")
+    # print("Dump test finished")
+    return passed
 
-def main():
+
+def basic_test():
     random.seed = time.clock()
     start_primary()
     start_backup()
-    insert_test()
+    time.sleep(2)
+
+    passed = insert_test()
+    if not passed:
+        stop_backup()
+        stop_primary()
+        return False
+
     stop_backup()
     start_backup()
-    delete_test()
-    update_test()
-    dump_test()
+    time.sleep(1)
+
+    passed = delete_test()
+    if not passed:
+        stop_backup()
+        stop_primary()
+        return False
+
+    passed = update_test()
+    if not passed:
+        stop_backup()
+        stop_primary()
+        return False
+
+    passed = dump_test()
+    if not passed:
+        stop_backup()
+        stop_primary()
+        return False
     stop_primary()
     start_primary()
-    dump_test()
+    time.sleep(1)
+
+    passed = dump_test()
+    if not passed:
+        stop_backup()
+        stop_primary()
+        return False
+
+    stop_backup()
+    stop_primary()
+    return True
+
+
+stress_test_size = 1000
+stress_test_result = [0] * stress_test_size
+
+
+def stress_group_insert_test(start=0, size=0):
+    for i in range(start, start + size):
+        stress_insert_test(i)
+    print(str(start) + " finished")
+
+
+def stress_insert_test(i=-1):
+    if i == -1:
+        return
+    result, temp = insert(str(i), ("*" * i))
+    if result["success"]:
+        stress_test_result[i] = 1
+
+
+def stress_dump_test():
+    passed = True
+    result = dump()
+    succes_count = 0
+    for i in range(stress_test_size):
+        if stress_test_result[i] == 1:
+            succes_count = succes_count + 1
+    if (succes_count != len(result)):
+        return False
+    # print(str(succes_count)+" entries, "+ str(len(result))+" entries")
+    for k in result:
+        length = int(k[0])
+        if k[1] != "*" * length:
+            return False
+            # print("Error "+str(length)+" result = "+k[1])
+    # print("Dump test passed")
+    return True
+
+
+def stress_test():
+    start_primary()
+    start_backup()
+    time.sleep(2)
+    threads = []
+    size = 100
+    groups = int(stress_test_size / size)
+    try:
+        for i in range(groups):
+            threads.append(threading.Thread(target=stress_group_insert_test, args=[i * size, size]))
+        for i in range(groups):
+            threads[i].start()
+        for i in range(groups):
+            threads[i].join()
+            # print("Insertion finished")
+    except Exception:
+        return False
+    if not stress_dump_test():
+        stop_primary()
+        stop_backup()
+        return False
+    stop_backup()
+    start_backup()
+    if not stress_dump_test():
+        stop_primary()
+        stop_backup()
+        return False
+    stop_primary()
+    start_primary()
+    time.sleep(1)
+    if not stress_dump_test():
+        stop_primary()
+        stop_backup()
+        return False
+    stop_primary()
+    stop_backup()
+    return True
+
+
+latency_test_size = 2000
+
+
+def latency_test():
+    start_primary()
+    start_backup()
+    time.sleep(2)
+    passed = True
+    total_insert_time = 0.0
+    insert_times = []
+    total_size = 0
+    temp = 0
+    for i in range(latency_test_size):
+        # print(i)
+        result, latency = insert(str(i), str(temp))
+        temp += 45631
+        if not result["success"]:
+            passed = False
+        else:
+            total_insert_time += latency
+            insert_times.append(latency)
+            total_size += 1
+            # if (total_size%100 == 0):
+    #             print("a")
+    # print("b")
+    total_get_time = 0.0
+    get_times = []
+    total_get_c = 0
+    for i in range(int(latency_test_size)):
+        # print(i)
+        result, latency = get(str((7 * i) % latency_test_size))
+        if not result["success"]:
+            continue
+        else:
+            total_get_time += latency
+            get_times.append(latency)
+            if result["value"] != str(((7 * i) % latency_test_size) * 45631):
+                passed = False
+            total_get_c += 1
+    #         if (total_get_c%100 == 0):
+    #             print("c")
+    # print("d")
+    stop_primary()
+    stop_backup()
+    insert_times.sort()
+    get_times.sort()
+    return passed, total_size, total_insert_time / total_size, total_get_time / total_get_c, insert_times, get_times
+
 
 if __name__ == '__main__':
-    main()
+    # load_config()
+    # print("a")
+    passed1 = True
+    # # passed1 = basic_test()
+    passed2 = True
+    # # passed2 = stress_test()
+    passed, total_size, average_insert, average_get, insert_times, get_times = latency_test()
+    print("Result: "+"Success" if (passed and passed1 and passed2) else "Fail")
+    print("Insertion: "+str(total_size)+"/"+str(latency_test_size))
+    print("Average latency: {0}/{1}".format(average_insert, average_get))
+    k_20 = int(total_size*0.2)
+    k_50 = int(total_size*0.5)
+    k_70 = int(total_size*0.7)
+    k_90 = int(total_size*0.9)
+    print("Percentile latency: {}/{}, {}/{}, {}/{}, {}/{}".format(insert_times[k_20], get_times[k_20]
+    , insert_times[k_50], get_times[k_50], insert_times[k_70], get_times[k_70], insert_times[k_90], get_times[k_90]))
