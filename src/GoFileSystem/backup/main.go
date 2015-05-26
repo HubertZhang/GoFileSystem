@@ -57,7 +57,7 @@ func HttpServer() {
 	r.HandleFunc("/kvman/countkey", HandleCountKey).Methods("GET")
 	r.HandleFunc("/kvman/dump", HandleDump).Methods("GET")
 	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
-	http.ListenAndServe("http://"+conf.Backup_ip+":"+conf.Http_port, r)
+	http.ListenAndServe(conf.Backup_ip+":"+conf.Http_port, r)
 }
 
 func sigEnd() {

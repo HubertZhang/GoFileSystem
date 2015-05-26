@@ -37,5 +37,5 @@ func main() {
 		go HeartBeat()
 	}
 
-	http.ListenAndServe("http://"+conf.Primary_ip+":"+conf.Http_port, r)
+	http.ListenAndServe(conf.Primary_ip+":"+conf.Http_port, r)
 }
