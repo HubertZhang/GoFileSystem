@@ -54,10 +54,14 @@ func waitForMsg() {
 			fmt.Println("Perform shutdown")
 			perform_shutdown(msg)
 
+		case HEARTBEAT:
+			fmt.Println("Heartbeat")
+			perform_heartbeat()
+
 		}
 	}
 }
- 
+
 
 func perform_get(msg *Msg) {
 
@@ -241,4 +245,18 @@ func perform_dump(msg *Msg) {
 
 func perform_shutdown(msg *Msg) {
 	msg.rsp <- NewRsp(nil, nil)
+}
+
+
+func perform_heartbeat() {
+	op, err := json.Marshal(NewOp(HEARTBEAT, "", ""))
+	if err != nil {
+		fmt.Println("HEARTBEAT::Error: " + err.Error())
+		return
+	}
+	if !Write(op) {
+		for !WaitReconnect() {
+			time.Sleep(1 * time.Second)
+		}
+	}
 }

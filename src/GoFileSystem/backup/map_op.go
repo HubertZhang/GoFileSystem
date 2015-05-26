@@ -9,7 +9,7 @@ const (
 	KVMAN_COUNTKEY = 5
 	KVMAN_DUMP     = 6
 	KVMAN_SHUTDOWN = 7
-	BACKUP         = 8
+	HEARTBEAT      = 8
 )
 
 var table = make(map[string]string)
@@ -22,5 +22,6 @@ func Perform(op *Op) {
 		table[op.Key] = op.Value
 	case KV_DELETE:
 		delete(table, op.Key)
+	case HEARTBEAT:
 	}
 }

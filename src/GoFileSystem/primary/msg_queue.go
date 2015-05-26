@@ -12,6 +12,7 @@ const (
 	KVMAN_COUNTKEY = 5
 	KVMAN_DUMP     = 6
 	KVMAN_SHUTDOWN = 7
+	HEARTBEAT      = 8
 )
 
 type Msg struct {
