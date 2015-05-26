@@ -34,22 +34,22 @@ def load_config():
 
 def start_primary(file=subprocess.DEVNULL):
     if not bypass_start_stop:
-        subprocess.Popen([os.getcwd() + "/start_server", "-p"], stdout=file)
+        subprocess.Popen([os.getcwd() + "/start_server", "-p"], stdout=file, stderr=subprocess.DEVNULL)
 
 
 def start_backup(file=subprocess.DEVNULL):
     if not bypass_start_stop:
-        subprocess.Popen([os.getcwd() + "/start_server", "-b"], stdout=file)
+        subprocess.Popen([os.getcwd() + "/start_server", "-b"], stdout=file, stderr=subprocess.DEVNULL)
 
 
 def stop_primary():
     if not bypass_start_stop:
-        subprocess.Popen([os.getcwd() + "/stop_server", "-p"], stdout=subprocess.DEVNULL)
+        subprocess.Popen([os.getcwd() + "/stop_server", "-p"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def stop_backup():
     if not bypass_start_stop:
-        subprocess.Popen([os.getcwd() + "/stop_server", "-b"], stdout=subprocess.DEVNULL)
+        subprocess.Popen([os.getcwd() + "/stop_server", "-b"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def test_primary():
@@ -227,7 +227,7 @@ def basic_test():
     return True
 
 
-stress_test_size = 10000
+stress_test_size = 1000
 stress_test_result = [0] * stress_test_size
 
 
@@ -280,6 +280,7 @@ def stress_test():
             threads[i].join()
     except Exception:
         return False
+    time.sleep(1)
     if not stress_dump_test():
         stop_primary()
         stop_backup()
@@ -287,7 +288,7 @@ def stress_test():
     stop_backup()
     time.sleep(1)
     start_backup()
-    time.sleep(1)
+    time.sleep(5)
 
     if not stress_dump_test():
         stop_primary()
