@@ -14,27 +14,22 @@ backup_admin = "http://localhost:8000/kvman/"
 primary_process = None
 backup_process=None
 
-def start_primary():
+def start_primary(file = subprocess.PIPE):
     global primary_process
-    primary_process = subprocess.Popen([os.getcwd()+"/../primary"], stdout=subprocess.PIPE)
+    primary_process = subprocess.Popen([os.getcwd()+"/../primary"], stdout=file)
 
-def start_backup():
+def start_backup(file = subprocess.PIPE):
     global backup_process
-    backup_process = subprocess.Popen([os.getcwd()+"/../backup"], stdout=subprocess.PIPE)
+    backup_process = subprocess.Popen([os.getcwd()+"/../backup"], stdout=file)
 
 def stop_primary():
-    try:
-        r = requests.get(server_admin + "shutdown", timeout=1)
-    except requests.exceptions.ConnectionError:
-        assert (backup_process.poll()==0)
+    global primary_process
+    primary_process.kill()
     return
 
 def stop_backup():
-    try:
-        r = requests.get(backup_admin + "shutdown", timeout=1)
-    except requests.exceptions.ConnectionError:
-        print(backup_process.poll())
-        assert (backup_process.poll()==0)
+    global backup_process
+    backup_process.kill()
     return
 
 def test_primary():
