@@ -2,6 +2,7 @@ package main
 
 import (
 	// "log"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"os"
@@ -36,5 +37,5 @@ func main() {
 		go HeartBeat()
 	}
 
-	http.ListenAndServe("http://"+conf.primary_ip+":"+conf.http_port, r)
+	http.ListenAndServe("http://"+conf.Primary_ip+":"+conf.Http_port, r)
 }

@@ -7,9 +7,9 @@ import (
 )
 
 type Conf struct {
-	primary_ip string `json:"primary"`
-	backup_ip  string `json:"backup"`
-	http_port  string `json:"port"`
+	Primary_ip string `json:"primary"`
+	Backup_ip  string `json:"backup"`
+	Http_port  string `json:"port"`
 }
 
 var conf = new(Conf)

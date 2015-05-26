@@ -32,7 +32,7 @@ func main() {
 func TcpServer() {
 	defer sigEnd()
 
-	l, err := net.Listen(CONN_TYPE, "http://"+conf.backup_ip+":"+CONN_PORT)
+	l, err := net.Listen(CONN_TYPE, conf.Backup_ip+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Main::LISTEN::Error: " + err.Error())
 		os.Exit(1)
@@ -57,7 +57,7 @@ func HttpServer() {
 	r.HandleFunc("/kvman/countkey", HandleCountKey).Methods("GET")
 	r.HandleFunc("/kvman/dump", HandleDump).Methods("GET")
 	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
-	http.ListenAndServe("http://"+conf.backup_ip+":"+conf.http_port, r)
+	http.ListenAndServe("http://"+conf.Backup_ip+":"+conf.Http_port, r)
 }
 
 func sigEnd() {

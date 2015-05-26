@@ -29,7 +29,7 @@ func NewOp(code int, key string, value string) *Op {
 func StartConn() bool {
 	fmt.Println("StartConn.")
 	var err error = nil
-	conn, err = net.Dial("tcp", "http://"+conf.backup_ip+":5000")
+	conn, err = net.Dial("tcp", conf.Backup_ip+":5000")
 	if err != nil {
 		fmt.Println("Write::DIAL::Error: " + err.Error())
 		return false
@@ -107,7 +107,7 @@ func Write(msg []byte) bool {
 func WaitReconnect() bool {
 	fmt.Println("StartConn.")
 	var err error = nil
-	conn, err = net.Dial("tcp", "http://"+conf.backup_ip+":5000")
+	conn, err = net.Dial("tcp", conf.Backup_ip+":5000")
 	if err != nil {
 		fmt.Println("Write::DIAL::Error: " + err.Error())
 		return false
