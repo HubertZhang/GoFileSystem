@@ -4,10 +4,17 @@ import (
 	// "log"
 	"github.com/gorilla/mux"
 	"net/http"
+	"os"
 	"time"
 )
 
 func main() {
+	err := init_config()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
 	// var greeting_handler GreetingHandler
 	// http.Handle("/greeting", greeting_handler)
 	r := mux.NewRouter()
@@ -29,6 +36,5 @@ func main() {
 		go HeartBeat()
 	}
 
-	http.ListenAndServe("localhost:4000", r)
+	http.ListenAndServe("http://"+conf.primary_ip+":"+conf.http_port, r)
 }
-

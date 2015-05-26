@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net"
-	"os"
 	"github.com/gorilla/mux"
+	"net"
 	"net/http"
+	"os"
 )
 
 const (
@@ -17,17 +17,23 @@ const (
 var sig_end chan int = make(chan int, 2)
 
 func main() {
+	err := init_config()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
 	go TcpServer()
 	go HttpServer()
-	<- sig_end
-	<- sig_end
+	<-sig_end
+	<-sig_end
 }
 
 func TcpServer() {
 	defer sigEnd()
 
-	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
-	if (err != nil) {
+	l, err := net.Listen(CONN_TYPE, "http://"+conf.backup_ip+":"+CONN_PORT)
+	if err != nil {
 		fmt.Println("Main::LISTEN::Error: " + err.Error())
 		os.Exit(1)
 	}
@@ -35,7 +41,7 @@ func TcpServer() {
 	defer l.Close()
 	for {
 		conn, err := l.Accept()
-		if (err != nil) {
+		if err != nil {
 			fmt.Println("Main::ACCEPT::Error: " + err.Error())
 			os.Exit(1)
 		}
@@ -51,7 +57,7 @@ func HttpServer() {
 	r.HandleFunc("/kvman/countkey", HandleCountKey).Methods("GET")
 	r.HandleFunc("/kvman/dump", HandleDump).Methods("GET")
 	r.HandleFunc("/kvman/shutdown", HandleShutdown).Methods("GET")
-	http.ListenAndServe("localhost:8000", r)
+	http.ListenAndServe("http://"+conf.backup_ip+":"+conf.http_port, r)
 }
 
 func sigEnd() {
