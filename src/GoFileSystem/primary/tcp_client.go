@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"strconv"
+	"time"
 )
 
 var conn net.Conn = nil
@@ -77,6 +78,8 @@ func StartConn() bool {
 		fmt.Println("STARTUP::Error: " + err.Error())
 		return false
 	}
+
+	go HeartBeat()
 	return true
 }
 
@@ -134,4 +137,12 @@ func WaitReconnect() bool {
 		fmt.Println("Wrong Reply")
 		return false
 	}
+}
+
+func HeartBeat() {
+	time.Sleep(1 * time.Second)
+	if len(msgChnl) == 0 {
+		msgChnl <- NewMsg(HEARTBEAT, "", "", nil)
+	}
+	go HeartBeat()
 }

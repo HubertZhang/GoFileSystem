@@ -26,7 +26,9 @@ func main() {
 		for !WaitReconnect() {
 			time.Sleep(1 * time.Second)
 		}
+		go HeartBeat()
 	}
 
 	http.ListenAndServe("localhost:4000", r)
 }
+
