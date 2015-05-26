@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"encoding/json"
+	"strconv"
 )
 
 type Op struct {
@@ -68,14 +69,15 @@ func getMsg() *Op {
 	}
 
 	body := make([]byte, body_length)
-	n, err = conn_reader.Read(body)
-	if err != nil {
-		fmt.Println("getMsg::READBODY::Error: " + err.Error())
-		return nil
-	}
-	if uint64(n) < body_length {
-		fmt.Println("Body Error")
-		return nil
+	var readed uint64 = 0
+	for readed != body_length {
+		n, err = conn_reader.Read(body[readed:])
+		if err != nil {
+			fmt.Println("getMsg::READBODY::Error: " + err.Error())
+			return nil
+		}
+		fmt.Println("Get package of length: " + strconv.Itoa(n))
+		readed += uint64(n)
 	}
 
 	op := new(Op)
@@ -126,14 +128,15 @@ func restoreBackup(conn_reader *bufio.Reader) bool {
 	}
 
 	body := make([]byte, body_length)
-	n, err = conn_reader.Read(body)
-	if err != nil {
-		fmt.Println("getMsg::READBODY::Error: " + err.Error())
-		return false
-	}
-	if uint64(n) < body_length {
-		fmt.Println("Body Error")
-		return false
+	var readed uint64 = 0
+	for readed != body_length {
+		n, err = conn_reader.Read(body[readed:])
+		if err != nil {
+			fmt.Println("getMsg::READBODY::Error: " + err.Error())
+			return false
+		}
+		fmt.Println("Get package of length: " + strconv.Itoa(n))
+		readed += uint64(n)
 	}
 
 	err = json.Unmarshal(body, &table)

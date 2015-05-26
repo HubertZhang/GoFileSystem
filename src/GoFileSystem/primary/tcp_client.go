@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"encoding/json"
+	"strconv"
 )
 
 var conn net.Conn = nil
@@ -60,14 +61,15 @@ func StartConn() bool {
 	}
 
 	body := make([]byte, body_length)
-	n, err = reader.Read(body)
-	if err != nil {
-		fmt.Println("STARTUP::Error: " + err.Error())
-		return false
-	}
-	if uint64(n) < body_length {
-		fmt.Println("STARTUP::Error: Body Error")
-		return false
+	var readed uint64 = 0
+	for readed != body_length {
+		n, err = reader.Read(body[readed:])
+		if err != nil {
+			fmt.Println("getMsg::READBODY::Error: " + err.Error())
+			return false
+		}
+		fmt.Println("Get package of length: " + strconv.Itoa(n))
+		readed += uint64(n)
 	}
 
 	err = json.Unmarshal(body, &table)
@@ -89,6 +91,7 @@ func Write(msg []byte) bool {
 	rsp, err := bufio.NewReader(conn).ReadByte()
 	if err != nil {
 		fmt.Println("Write::READSTRING::Error: " + err.Error())
+
 		return false
 	}
 	if rsp == 1 {
