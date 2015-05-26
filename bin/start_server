@@ -12,5 +12,4 @@ else
 		./backup &
 	fi
 fi
-sleep 1
 

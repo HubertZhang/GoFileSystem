@@ -13,7 +13,7 @@ import threading
 server = "http://localhost:4000/kv/"
 server_admin = "http://localhost:4000/kvman/"
 backup_admin = "http://localhost:8000/kvman/"
-bypass_start_stop = True
+bypass_start_stop = False
 
 
 def load_config():
@@ -26,7 +26,7 @@ def load_config():
     backup_port = int(config['port'])
     if (primary_ip == backup_ip):
         backup_port += 1
-        bypass_start_stop = False
+        # bypass_start_stop = False
     server = "http://{ip}:{port}/kv/".format(ip=primary_ip, port=primary_port)
     server_admin = "http://{ip}:{port}/kvman/".format(ip=primary_ip, port=primary_port)
     backup_admin = "http://{ip}:{port}/kvman/".format(ip=backup_ip, port=backup_port)
@@ -178,8 +178,9 @@ def dump_test():
 def basic_test():
     random.seed = time.clock()
     start_primary()
+    time.sleep(1)
     start_backup()
-    time.sleep(3)
+    time.sleep(1)
 
     passed = insert_test()
     if not passed:
@@ -188,8 +189,9 @@ def basic_test():
         return False
 
     stop_backup()
+    time.sleep(1)
     start_backup()
-    time.sleep(3)
+    time.sleep(1)
 
     passed = delete_test()
     if not passed:
@@ -209,8 +211,9 @@ def basic_test():
         stop_primary()
         return False
     stop_primary()
+    time.sleep(1)
     start_primary()
-    time.sleep(3)
+    time.sleep(1)
 
     passed = dump_test()
     if not passed:
@@ -220,17 +223,18 @@ def basic_test():
 
     stop_backup()
     stop_primary()
+    time.sleep(3)
     return True
 
 
-stress_test_size = 1000
+stress_test_size = 10000
 stress_test_result = [0] * stress_test_size
 
 
 def stress_group_insert_test(start=0, size=0):
     for i in range(start, start + size):
         stress_insert_test(i)
-    print(str(start) + " finished")
+    # print(str(start) + " finished")
 
 
 def stress_insert_test(i=-1):
@@ -281,16 +285,18 @@ def stress_test():
         stop_backup()
         return False
     stop_backup()
+    time.sleep(1)
     start_backup()
-    time.sleep(3)
+    time.sleep(1)
 
     if not stress_dump_test():
         stop_primary()
         stop_backup()
         return False
     stop_primary()
+    time.sleep(1)
     start_primary()
-    time.sleep(3)
+    time.sleep(5)
 
     if not stress_dump_test():
         stop_primary()
@@ -301,7 +307,7 @@ def stress_test():
     return True
 
 
-latency_test_size = 2000
+latency_test_size = 20000
 
 
 def latency_test():

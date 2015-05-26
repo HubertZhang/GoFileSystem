@@ -14,4 +14,4 @@ else
             pkill backup
         fi
 fi
-sleep 1
+
