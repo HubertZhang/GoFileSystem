@@ -5,25 +5,36 @@ import json
 import os
 import random
 import time
+import subprocess
 
 server = "http://localhost:4000/kv/"
 server_admin = "http://localhost:4000/kvman/"
-backup_admin = "http://localhost:5000/kvman/"
+backup_admin = "http://localhost:8000/kvman/"
+
+primary_process = None
+backup_process=None
 
 def start_primary():
-    os.system("../start_server –p")
+    global primary_process
+    primary_process = subprocess.Popen([os.getcwd()+"/../primary"], stdout=subprocess.PIPE)
 
 def start_backup():
-    os.system("../start_server –b")
+    global backup_process
+    backup_process = subprocess.Popen([os.getcwd()+"/../backup"], stdout=subprocess.PIPE)
 
 def stop_primary():
-    r = requests.get(server_admin + "shutdown")
-    assert (r.status_code == 200)
+    try:
+        r = requests.get(server_admin + "shutdown", timeout=1)
+    except requests.exceptions.ConnectionError:
+        assert (backup_process.poll()==0)
     return
 
 def stop_backup():
-    r = requests.get(backup_admin + "shutdown")
-    assert (r.status_code == 200)
+    try:
+        r = requests.get(backup_admin + "shutdown", timeout=1)
+    except requests.exceptions.ConnectionError:
+        print(backup_process.poll())
+        assert (backup_process.poll()==0)
     return
 
 def test_primary():
@@ -144,5 +155,5 @@ def main():
     start_primary()
     dump_test()
 
-
-main()
+if __name__ == '__main__':
+    main()
