@@ -17,7 +17,8 @@ func HandleGet(w http.ResponseWriter, r *http.Request) {
 	msgChnl <- msg
 	body := <- rsp
 	if body.err != nil {
-		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		// http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		body.data = returnError()
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
@@ -28,7 +29,9 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(returnError())
 		return
 	}
 	k := req.Key
@@ -39,7 +42,8 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	msgChnl <- msg
 	body := <- rsp
 	if body.err != nil {
-		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		// http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		body.data = returnError()
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
@@ -50,7 +54,9 @@ func HandleInsert(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(returnError())
 		return
 	}
 	k := req.Key
@@ -62,7 +68,8 @@ func HandleInsert(w http.ResponseWriter, r *http.Request) {
 	msgChnl <- msg
 	body := <- rsp
 	if body.err != nil {
-		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		// http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		body.data = returnError()
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
@@ -73,7 +80,9 @@ func HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(returnError())
 		return
 	}
 	k := req.Key
@@ -86,8 +95,23 @@ func HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	msgChnl <- msg
 	body := <- rsp
 	if body.err != nil {
-		http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		// http.Error(w, body.err.Error(), http.StatusInternalServerError)
+		body.data = returnError()
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body.data)
+}
+
+func returnError() []byte {
+	data := struct {
+		Success bool `json:"success"`
+	} {
+		false,
+	}
+
+	rsp, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	return rsp
 }
