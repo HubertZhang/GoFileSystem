@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if ! [ $# = 1 ]; then
+        echo $#
+        echo "Usage:\n$0 [-p|-b]"
+        exit
+fi
+if [ "$1"x = "-p"x ]; then
+        curl "http://localhost:4000/kvman/shutdown"
+else
+        if [ "$1"x = "-b"x ]; then
+        	curl "http://localhost:8000/kvman/shutdown"
+        fi
+fi
+sleep 1
