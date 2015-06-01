@@ -26,14 +26,16 @@ func HandleGet(w http.ResponseWriter, r *http.Request) {
 
 func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	var req Req
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
-	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(returnError())
-		return
-	}
+	req.Key = r.PostFormValue("key")
+	// req.Value = r.PostFormValue("value")
+	// decoder := json.NewDecoder(r.Body)
+	// err := decoder.Decode(&req)
+	// if err != nil {
+	// 	// http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.Write(returnError())
+	// 	return
+	// }
 	k := req.Key
 
 	// k := r.URL.Query().Get("key")
@@ -51,14 +53,16 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 
 func HandleInsert(w http.ResponseWriter, r *http.Request) {
 	var req Req
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
-	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(returnError())
-		return
-	}
+	req.Key = r.PostFormValue("key")
+	req.Value = r.PostFormValue("value")
+	// decoder := json.NewDecoder(r.Body)
+	// err := decoder.Decode(&req)
+	// if err != nil {
+	// 	// http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.Write(returnError())
+	// 	return
+	// }
 	k := req.Key
 	v := req.Value
 	// k := r.URL.Query().Get("key")
@@ -77,14 +81,16 @@ func HandleInsert(w http.ResponseWriter, r *http.Request) {
 
 func HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	var req Req
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
-	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(returnError())
-		return
-	}
+	req.Key = r.PostFormValue("key")
+	req.Value = r.PostFormValue("value")
+	// decoder := json.NewDecoder(r.Body)
+	// err := decoder.Decode(&req)
+	// if err != nil {
+	// 	// http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.Write(returnError())
+	// 	return
+	// }
 	k := req.Key
 	v := req.Value
 

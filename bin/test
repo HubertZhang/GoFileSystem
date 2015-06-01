@@ -72,7 +72,7 @@ def delete(key=""):
     if (key == ""):
         return
     payload = {'key': key}
-    r = requests.post(server + "delete", data=json.dumps(payload))
+    r = requests.post(server + "delete", params=payload)
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -80,7 +80,7 @@ def insert(key="", value=""):
     if (key == ""):
         return
     payload = {'key': key, "value": value}
-    r = requests.post(server + "insert", data=json.dumps(payload))
+    r = requests.post(server + "insert", params=payload)
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -88,7 +88,7 @@ def update(key="", value=""):
     if (key == ""):
         return
     payload = {'key': key, "value": value}
-    r = requests.post(server + "update", data=json.dumps(payload))
+    r = requests.post(server + "update", params=payload)
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -355,6 +355,7 @@ if __name__ == '__main__':
     load_config()
     passed1 = True
     passed1 = basic_test()
+    print(passed1)
     passed2 = True
     passed2 = stress_test()
     passed, total_size, average_insert, average_get, insert_times, get_times = latency_test()
