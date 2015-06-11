@@ -64,7 +64,7 @@ def get(key=""):
     if (key == ""):
         return
     params = {"key": key}
-    r = requests.get(server + "get", params=params)
+    r = requests.get(server + "get", params=params, headers={"Content-Type": "application/x-www-form-urlencoded"})
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -72,7 +72,7 @@ def delete(key=""):
     if (key == ""):
         return
     payload = {'key': key}
-    r = requests.post(server + "delete", params=payload)
+    r = requests.post(server + "delete", data=payload, headers={"Content-Type": "application/x-www-form-urlencoded"})
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -80,7 +80,7 @@ def insert(key="", value=""):
     if (key == ""):
         return
     payload = {'key': key, "value": value}
-    r = requests.post(server + "insert", params=payload)
+    r = requests.post(server + "insert", data=payload, headers={"Content-Type": "application/x-www-form-urlencoded"})
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -88,7 +88,7 @@ def update(key="", value=""):
     if (key == ""):
         return
     payload = {'key': key, "value": value}
-    r = requests.post(server + "update", params=payload)
+    r = requests.post(server + "update", data=payload, headers={"Content-Type": "application/x-www-form-urlencoded"})
     return r.json(), r.elapsed.total_seconds()
 
 
@@ -308,7 +308,7 @@ def stress_test():
     return True
 
 
-latency_test_size = 20000
+latency_test_size = 2000
 
 
 def latency_test():
