@@ -15,7 +15,7 @@ type Conf struct {
 var conf = new(Conf)
 
 func init_config() error {
-	bytes, err := ioutil.ReadFile("../conf/settings.conf")
+	bytes, err := ioutil.ReadFile("./conf/settings.conf")
 	if err != nil {
 		fmt.Println("Error on opening settings.conf")
 		return err
